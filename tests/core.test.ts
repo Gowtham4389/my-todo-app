@@ -9,6 +9,7 @@ import {
 } from "../src/lib/dates";
 import {
   makeTask,
+  purgeOccurrence,
   blankSnapshot,
   defaultSettings,
   type Series,
@@ -184,5 +185,77 @@ describe("backup validation and merging", () => {
     const csv = taskCSV([makeTask("=1+1", { notes: 'Hello, "world"' })]);
     expect(csv).toContain("'=1+1");
     expect(csv).toContain('"Hello, ""world"""');
+  });
+});
+
+describe("permanent occurrence deletion", () => {
+  it("scrubs contents and prevents regeneration in every view", () => {
+    const s = series("daily", "2026-09-01");
+    const task = expandSeries([s], [], "2026-09-01", "2026-09-01")[0];
+    const marker = purgeOccurrence(
+      {
+        ...task,
+        notes: "Private notes",
+        goalId: "goal",
+        subtasks: [{ id: "step", title: "Private step", done: true }],
+      },
+      123,
+    );
+    expect(marker.title).toBe("Deleted occurrence");
+    expect(marker.notes).toBe("");
+    expect(marker.subtasks).toEqual([]);
+    expect(marker.goalId).toBeNull();
+    for (const view of [
+      "today",
+      "week",
+      "month",
+      "year",
+      "inbox",
+      "completed",
+      "trash",
+    ] as const)
+      expect(matchesView(marker, view, "2026-09-01", defaultSettings)).toBe(
+        false,
+      );
+    const remaining = expandSeries([s], [marker], "2026-09-01", "2026-09-03");
+    expect(remaining.map((t) => t.occurrenceDate)).toEqual([
+      "2026-09-02",
+      "2026-09-03",
+    ]);
+    expect(taskCSV([marker])).not.toContain("Deleted occurrence");
+  });
+  it("preserves deletion in backups even against a newer stale copy", () => {
+    const s = series("daily", "2026-09-01");
+    const task = expandSeries([s], [], "2026-09-01", "2026-09-01")[0];
+    const b = {
+      ...backup(),
+      series: [s],
+      occurrences: [purgeOccurrence(task, 123)],
+    };
+    const parsed = parseBackup(JSON.stringify(b));
+    const stale = { ...backup(), occurrences: [{ ...task, updatedAt: 999 }] };
+    expect(mergeBackup(parsed, stale).occurrences).toEqual(parsed.occurrences);
+    expect(importPreview(parsed, stale)).toEqual({
+      added: 0,
+      updated: 0,
+      skipped: 1,
+    });
+    expect(mergeBackup(stale, parsed).occurrences).toEqual(parsed.occurrences);
+    expect(() =>
+      parseBackup(
+        JSON.stringify({
+          ...b,
+          occurrences: [{ ...b.occurrences[0], notes: "Not scrubbed" }],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      parseBackup(
+        JSON.stringify({
+          ...b,
+          tasks: [{ ...makeTask("bad"), purgedAt: 123 }],
+        }),
+      ),
+    ).toThrow();
   });
 });

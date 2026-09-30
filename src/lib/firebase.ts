@@ -1,3 +1,4 @@
+import { shouldImportRecord } from "./model";
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -290,10 +291,9 @@ export async function importRecords(
   let batch = writeBatch(db),
     size = 0;
   for (const key of ["tasks", "occurrences", "goals", "series"] as const) {
-    const times = new Map(existing[key].map((x) => [x.id, x.updatedAt]));
+    const records = new Map(existing[key].map((x) => [x.id, x]));
     for (const row of incoming[key]) {
-      const time = times.get(row.id);
-      if (time !== undefined && time >= row.updatedAt) continue;
+      if (!shouldImportRecord(records.get(row.id), row)) continue;
       batch.set(doc(db, `users/${uid}/${key}/${row.id}`), row, { merge: true });
       size++;
       if (size === 400) {

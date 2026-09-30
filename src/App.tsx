@@ -805,8 +805,8 @@ function Workspace({
                   {["completed", "trash"].includes(view) && (
                     <div className={s.historyFooter}>
                       <p>
-                        Search covers loaded records. Recurring deletions stay
-                        in Trash to preserve the skipped occurrence.
+                        Search covers loaded records. Permanently deleted tasks
+                        cannot be restored.
                       </p>
                       {(data.tasks.length >= count ||
                         data.occurrences.length >= count) && (

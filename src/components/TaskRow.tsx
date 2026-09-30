@@ -81,22 +81,20 @@ export default function TaskRow({
           >
             <RotateCcw size={18} />
           </button>
-          {!task.seriesId && (
-            <button
-              className={s.iconButton}
-              aria-label={`Permanently delete ${task.title}`}
-              onClick={() => {
-                if (
-                  confirm(
-                    "Permanently delete this task? This cannot be undone.",
-                  )
+          <button
+            className={s.iconButton}
+            aria-label={`Permanently delete ${task.title}`}
+            onClick={() => {
+              if (
+                confirm(
+                  "Permanently delete this task from all views and synced devices? This cannot be undone.",
                 )
-                  store.remove(task);
-              }}
-            >
-              <Trash2 size={18} />
-            </button>
-          )}
+              )
+                store.remove(task);
+            }}
+          >
+            <Trash2 size={18} />
+          </button>
         </>
       )}
     </div>

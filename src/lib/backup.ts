@@ -1,6 +1,7 @@
 import { validDate } from "./dates";
 import {
   categories,
+  shouldImportRecord,
   type Snapshot,
   type Task,
   type Goal,
@@ -48,10 +49,26 @@ export function validTask(v: unknown): v is Task {
       "deletedAt",
       "seriesId",
       "occurrenceDate",
+      ...("purgedAt" in v ? ["purgedAt"] : []),
     ])
   )
     return false;
   return (
+    (!("purgedAt" in v) ||
+      (timestamp(v.purgedAt) &&
+        v.seriesId !== null &&
+        v.deletedAt === v.purgedAt &&
+        v.title === "Deleted occurrence" &&
+        v.notes === "" &&
+        v.status === "todo" &&
+        v.priority === "none" &&
+        v.category === "Personal" &&
+        v.dueDate === null &&
+        v.planType === null &&
+        v.goalId === null &&
+        v.completedAt === null &&
+        Array.isArray(v.subtasks) &&
+        v.subtasks.length === 0)) &&
     id(v.id) &&
     text(v.title, 300) &&
     (v.title as string).trim().length > 0 &&
@@ -206,11 +223,11 @@ export function importPreview(current: Snapshot, incoming: Backup) {
     updated = 0,
     skipped = 0;
   for (const k of ["tasks", "occurrences", "goals", "series"] as const) {
-    const existing = new Map(current[k].map((x) => [x.id, x.updatedAt]));
+    const existing = new Map(current[k].map((x) => [x.id, x]));
     for (const record of incoming[k]) {
-      const time = existing.get(record.id);
-      if (time === undefined) added++;
-      else if (record.updatedAt > time) updated++;
+      const old = existing.get(record.id);
+      if (!old) added++;
+      else if (shouldImportRecord(old, record)) updated++;
       else skipped++;
     }
   }
@@ -224,7 +241,7 @@ export function mergeBackup(current: Snapshot, incoming: Backup): Snapshot {
     );
     for (const record of incoming[key]) {
       const old = map.get(record.id);
-      if (!old || record.updatedAt > old.updatedAt) map.set(record.id, record);
+      if (shouldImportRecord(old, record)) map.set(record.id, record);
     }
     Object.assign(result, { [key]: [...map.values()] });
   }
@@ -261,17 +278,19 @@ export function taskCSV(tasks: Task[]) {
       "Plan end",
       "Notes",
     ],
-    ...tasks.map((t) => [
-      t.title,
-      t.status,
-      t.priority,
-      t.category,
-      t.dueDate,
-      t.planType,
-      t.planStart,
-      t.planEnd,
-      t.notes,
-    ]),
+    ...tasks
+      .filter((t) => t.purgedAt === undefined)
+      .map((t) => [
+        t.title,
+        t.status,
+        t.priority,
+        t.category,
+        t.dueDate,
+        t.planType,
+        t.planStart,
+        t.planEnd,
+        t.notes,
+      ]),
   ]
     .map((row) => row.map(cell).join(","))
     .join("\r\n");

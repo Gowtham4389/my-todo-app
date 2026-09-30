@@ -70,7 +70,7 @@ The workflow does **not** deploy Firebase rules automatically: that requires you
 - **Today:** tasks due on the selected day, with active overdue tasks separated. Use the arrows to move between days.
 - **Week / Month:** deadlines within the period or planning ranges that overlap it. A yearly intention can appear in shorter planning views without acquiring a deadline.
 - **Year:** yearly goals plus tasks grouped by deadline month or planning month. Annual intentions without deadlines have their own group.
-- **Completed / Trash:** history is loaded in increments of 30 records per collection. Search filters loaded history; load more to search further back. Recurring occurrence tombstones can be restored but cannot be permanently deleted, so the series does not regenerate them.
+- **Completed / Trash:** history is loaded in increments of 30 records per collection. Search filters loaded history; load more to search further back. Tasks can be permanently deleted from task details or Trash. Deletion syncs across views and devices. A permanently deleted recurring occurrence leaves only a hidden, scrubbed marker to prevent regeneration; other occurrences remain.
 - Click a task to edit its notes, status, priority, category, due date, plan, linked goal, and up to 10 subtasks. Save explicitly. Closing a dirty task asks before discarding changes.
 - Complete a task using its circle. Recent completion and deletion changes can be undone for 10 seconds. Trash keeps soft-deleted tasks indefinitely until you restore or permanently delete them.
 - **Settings:** light/dark/system theme, IANA timezone, Monday/Sunday week start, account, series controls, and backups.
@@ -99,7 +99,7 @@ The UI generates occurrences only for the selected day/week/month/year. It creat
 
 Editing a recurring instance affects only that occurrence. Its visible due date may move while its identity remains tied to its original date. Saved occurrences remain available after a series ends. Ending a series keeps its end date inclusive and prevents generation afterward. There is no “edit all future occurrences” operation: end the old series and create a new one. A future-starting series ended before its start keeps its first occurrence; remove that occurrence individually to skip it.
 
-Missed, unrecorded occurrences outside the selected period are not automatically backfilled into Today's overdue list. Open the original week/month/year to act on them. Saved overdue occurrence records do appear in Today. Deleted instances remain as tombstones; the UI and rules prohibit permanently deleting them.
+Missed, unrecorded occurrences outside the selected period are not automatically backfilled into Today's overdue list. Open the original week/month/year to act on them. Saved overdue occurrence records do appear in Today. Trashed instances can be restored. Permanent deletion clears the occurrence’s contents and retains an immutable, hidden marker; exports and recurrence expansion respect it. JSON backups preserve these markers to prevent regeneration after import.
 
 ## Offline behavior, synchronization, and conflicts
 

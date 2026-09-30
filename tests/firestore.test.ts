@@ -1,13 +1,20 @@
 import { readFileSync } from "node:fs";
-import { beforeAll, afterAll, afterEach, describe, it } from "vitest";
+import { beforeAll, afterAll, afterEach, describe, it, expect } from "vitest";
 import {
   initializeTestEnvironment,
   assertSucceeds,
   assertFails,
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { doc, setDoc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
-import { makeTask } from "../src/lib/model";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  getDocFromServer,
+} from "firebase/firestore";
+import { makeTask, purgeOccurrence } from "../src/lib/model";
 let env: RulesTestEnvironment;
 beforeAll(async () => {
   env = await initializeTestEnvironment({
@@ -122,4 +129,46 @@ describe("owner access", () => {
       }),
     );
   });
+});
+
+it("propagates permanent deletion to a second owner client", async () => {
+  const first = ref("test-owner");
+  const second = ref("test-owner");
+  await assertSucceeds(
+    setDoc(first, makeTask("Delete across devices", { id: "task" })),
+  );
+  expect((await getDocFromServer(second)).exists()).toBe(true);
+  await assertSucceeds(deleteDoc(first));
+  expect((await getDocFromServer(second)).exists()).toBe(false);
+});
+it("allows scrubbed occurrence deletion but rejects restoration and retained contents", async () => {
+  const path = "users/test-owner/occurrences/series_2026-09-01";
+  const r = ref("test-owner", path);
+  const task = makeTask("Private title", {
+    id: "series_2026-09-01",
+    seriesId: "series",
+    occurrenceDate: "2026-09-01",
+    notes: "Private notes",
+  });
+  const marker = purgeOccurrence(task);
+  await assertSucceeds(setDoc(r, task));
+  await assertFails(setDoc(r, { ...marker, notes: "Private notes" }));
+  await assertSucceeds(setDoc(r, marker));
+  expect((await getDocFromServer(ref("test-owner", path))).data()).toEqual(
+    marker,
+  );
+  await assertFails(setDoc(r, task));
+  await assertFails(updateDoc(r, { deletedAt: null }));
+  await assertFails(deleteDoc(r));
+  const next = {
+    ...task,
+    id: "series_2026-09-02",
+    occurrenceDate: "2026-09-02",
+  };
+  await assertSucceeds(
+    setDoc(
+      ref("test-owner", "users/test-owner/occurrences/series_2026-09-02"),
+      purgeOccurrence(next),
+    ),
+  );
 });

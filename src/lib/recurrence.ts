@@ -47,5 +47,7 @@ export function expandSeries(
     }
   }
   // Overrides survive ending a series and moving an occurrence to a different day.
-  return [...result, ...overrides.values()];
+  return [...result, ...overrides.values()].filter(
+    (t) => t.purgedAt === undefined,
+  );
 }

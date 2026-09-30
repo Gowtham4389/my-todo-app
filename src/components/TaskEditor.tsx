@@ -137,7 +137,7 @@ export default function TaskEditor({
         )}
         <div className={s.formGrid}>
           <label>
-            Status
+            <span className={s.fieldLabel}>Status</span>
             <select
               value={draft.status}
               onChange={(e) =>
@@ -153,7 +153,9 @@ export default function TaskEditor({
             </select>
           </label>
           <label>
-            <Flag size={14} /> Priority
+            <span className={s.fieldLabel}>
+              <Flag size={14} /> Priority
+            </span>
             <select
               value={draft.priority}
               onChange={(e) =>
@@ -168,7 +170,9 @@ export default function TaskEditor({
             </select>
           </label>
           <label>
-            <CalendarDays size={14} /> Due date
+            <span className={s.fieldLabel}>
+              <CalendarDays size={14} /> Due date
+            </span>
             <input
               type="date"
               value={draft.dueDate || ""}
@@ -176,7 +180,7 @@ export default function TaskEditor({
             />
           </label>
           <label>
-            Category
+            <span className={s.fieldLabel}>Category</span>
             <select
               value={draft.category}
               onChange={(e) =>
@@ -191,7 +195,7 @@ export default function TaskEditor({
           {!task.seriesId && (
             <>
               <label>
-                Planning period
+                <span className={s.fieldLabel}>Planning period</span>
                 <select
                   value={draft.planType || ""}
                   onChange={(e) =>
@@ -208,7 +212,7 @@ export default function TaskEditor({
                 </select>
               </label>
               <label>
-                Plan around
+                <span className={s.fieldLabel}>Plan around</span>
                 <input
                   type="date"
                   disabled={!draft.planType}
@@ -222,7 +226,7 @@ export default function TaskEditor({
             </>
           )}
           <label className={s.fullWidth}>
-            Larger goal
+            <span className={s.fieldLabel}>Larger goal</span>
             <select
               value={draft.goalId || ""}
               onChange={(e) => change({ goalId: e.target.value || null })}
@@ -389,6 +393,24 @@ export default function TaskEditor({
           >
             <Trash2 size={16} />
             Move to trash
+          </button>
+          <button
+            className={s.dangerAction}
+            onClick={() => {
+              if (
+                confirm(
+                  task.seriesId
+                    ? "Permanently delete this occurrence from all views and synced devices? Other occurrences will remain. This cannot be undone."
+                    : "Permanently delete this task from all views and synced devices? This cannot be undone.",
+                )
+              ) {
+                store.remove(task);
+                onClose();
+              }
+            }}
+          >
+            <Trash2 size={16} />
+            Delete permanently
           </button>
           {task.seriesId && (
             <button

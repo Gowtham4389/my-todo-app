@@ -25,6 +25,7 @@ import {
 import {
   blankSnapshot,
   makeTask,
+  purgeOccurrence,
   type Task,
   type Collection,
   type Snapshot,
@@ -291,6 +292,7 @@ export function Provider({
   ) => {
     const old = dataRef.current;
     const previous = old[key].find((x) => x.id === row.id);
+    if (previous && "purgedAt" in previous) return;
     const next = {
       ...old,
       [key]: [...old[key].filter((x) => x.id !== row.id), row],
@@ -410,22 +412,26 @@ export function Provider({
       );
   };
   const remove = (task: Task) => {
+    setUndoItem((item) => (item?.task.id === task.id ? null : item));
     if (task.seriesId) {
-      setError(
-        "Keep recurring occurrences in Trash to prevent the series from generating them again.",
-      );
+      put("occurrences", purgeOccurrence(task));
       return;
     }
     const next = {
       ...dataRef.current,
       tasks: dataRef.current.tasks.filter((t) => t.id !== task.id),
     };
+    dataRef.current = next;
     setData(next);
     if (mode === "demo") persistDemo(next);
     else
       run(
         () => removeRecord(user!.uid, "tasks", task.id),
-        () => setData((d) => ({ ...d, tasks: [...d.tasks, task] })),
+        () =>
+          setData((d) => ({
+            ...d,
+            tasks: [...d.tasks.filter((t) => t.id !== task.id), task],
+          })),
       );
   };
   const preferences = (settings: Settings) => {

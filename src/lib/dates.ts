@@ -71,6 +71,7 @@ export function matchesView(
   date: string,
   settings: Settings,
 ): boolean {
+  if (t.purgedAt !== undefined) return false;
   if (view === "trash") return t.deletedAt !== null;
   if (t.deletedAt !== null) return false;
   if (view === "completed") return t.status === "done";

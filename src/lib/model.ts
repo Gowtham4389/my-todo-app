@@ -49,6 +49,7 @@ export interface Task {
   updatedAt: number;
   completedAt: number | null;
   deletedAt: number | null;
+  purgedAt?: number;
   seriesId: string | null;
   occurrenceDate: string | null;
 }
@@ -106,3 +107,27 @@ export const makeTask = (title: string, extra: Partial<Task> = {}): Task => ({
   occurrenceDate: null,
   ...extra,
 });
+
+// Keep only a scrubbed marker so recurrence expansion cannot regenerate this date.
+export function purgeOccurrence(task: Task, now = Date.now()): Task {
+  if (!task.seriesId || !task.occurrenceDate)
+    throw new Error("Only recurring occurrences need a deletion marker.");
+  return makeTask("Deleted occurrence", {
+    id: task.id,
+    seriesId: task.seriesId,
+    occurrenceDate: task.occurrenceDate,
+    createdAt: now,
+    updatedAt: now,
+    deletedAt: now,
+    purgedAt: now,
+  });
+}
+export function shouldImportRecord(
+  current: Task | Goal | Series | undefined,
+  incoming: Task | Goal | Series,
+): boolean {
+  if (current && "purgedAt" in current) return false;
+  return (
+    !current || "purgedAt" in incoming || incoming.updatedAt > current.updatedAt
+  );
+}

@@ -151,7 +151,9 @@ test("recurring occurrences stay independent, and goals link to the same task", 
   await page.getByRole("link", { name: "Today", exact: true }).click();
   await page.getByRole("button", { name: "Add task", exact: true }).click();
   await page.getByLabel("Task title").fill("Daily learning ritual");
-  await page.getByRole("combobox", { name: "Repeat", exact: true }).selectOption("daily");
+  await page
+    .getByRole("combobox", { name: "Repeat", exact: true })
+    .selectOption("daily");
   await page
     .getByRole("combobox", { name: "Larger goal", exact: true })
     .selectOption({
@@ -182,4 +184,85 @@ test("recurring occurrences stay independent, and goals link to the same task", 
   await expect(
     page.getByRole("button", { name: /Learn something every day/ }),
   ).toContainText("1 of 1 linked tasks complete");
+});
+
+test("permanent deletion clears every view, Undo, and persists after reload", async ({
+  page,
+}) => {
+  await demo(page);
+  const title = "Permanently removed task";
+  await page.getByRole("textbox", { name: "Quick add task" }).fill(title);
+  await page.getByRole("button", { name: "Create quick task" }).click();
+  await page
+    .getByRole("button", { name: `Complete ${title}`, exact: true })
+    .click();
+  await page.getByRole("button", { name: new RegExp(`^${title}`) }).click();
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await page
+    .getByRole("button", { name: "Delete permanently", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page
+    .getByRole("button", { name: "Delete permanently", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Undo", exact: true }),
+  ).toHaveCount(0);
+  for (const view of [
+    "This week",
+    "This month",
+    "This year",
+    "Completed",
+    "Trash",
+    "Inbox",
+  ]) {
+    await page.getByRole("link", { name: view, exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: new RegExp(title) }),
+    ).toHaveCount(0);
+  }
+  await page.reload();
+  await page.getByRole("button", { name: "Explore the demo" }).click();
+  await page.getByRole("link", { name: "Today", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: new RegExp(title) }),
+  ).toHaveCount(0);
+});
+test("permanently deleting a recurring occurrence from Trash does not recreate it", async ({
+  page,
+}) => {
+  await demo(page);
+  const title = "Recurring deletion check";
+  await page.getByRole("button", { name: "Add task", exact: true }).click();
+  await page.getByLabel("Task title").fill(title);
+  await page
+    .getByRole("combobox", { name: "Repeat", exact: true })
+    .selectOption("daily");
+  await page.getByRole("button", { name: "Create task", exact: true }).click();
+  await page.getByRole("button", { name: new RegExp(`^${title}`) }).click();
+  await page
+    .getByRole("button", { name: "Move to trash", exact: true })
+    .click();
+  await page.getByRole("link", { name: "Trash", exact: true }).click();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page
+    .getByRole("button", { name: `Permanently delete ${title}`, exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: new RegExp(title) }),
+  ).toHaveCount(0);
+  await page.getByRole("link", { name: "Today", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: new RegExp(title) }),
+  ).toHaveCount(0);
+  await page.reload();
+  await page.getByRole("button", { name: "Explore the demo" }).click();
+  await expect(
+    page.getByRole("button", { name: new RegExp(title) }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Next period", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: `Complete ${title}`, exact: true }),
+  ).toBeVisible();
 });

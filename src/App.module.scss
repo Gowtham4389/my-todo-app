@@ -772,23 +772,29 @@
 }
 .formGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px 14px;
   label {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
+    flex-direction: column;
+    gap: 9px;
     font-size: 14px;
     color: var(--muted);
     input,
     select {
       width: 100%;
       font-size: 16px;
-      margin-top: 3px;
-      min-height: 42px;
+      height: 52px;
+      min-height: 52px;
+      line-height: 1.5;
     }
   }
+}
+.fieldLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 21px;
 }
 .fullWidth {
   grid-column: 1/-1;
@@ -807,6 +813,9 @@
     line-height: 1.6;
     margin-top: 2px;
   }
+}
+.field select {
+  height: 52px;
 }
 .subtaskHeader {
   display: flex;
@@ -869,6 +878,9 @@
     color: var(--muted);
     padding: 8px;
   }
+}
+.editorActions .dangerAction {
+  color: var(--danger);
 }
 .editorFoot {
   font-family: var(--font-sans);

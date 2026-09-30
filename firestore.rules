@@ -15,7 +15,8 @@ service cloud.firestore {
     && stepAt(list, 0) && stepAt(list, 1) && stepAt(list, 2) && stepAt(list, 3) && stepAt(list, 4) && stepAt(list, 5) && stepAt(list, 6) && stepAt(list, 7) && stepAt(list, 8) && stepAt(list, 9); }
   function task(t) {
    return t.keys().hasAll(['id','title','notes','status','priority','category','dueDate','planType','planStart','planEnd','goalId','subtasks','createdAt','updatedAt','completedAt','deletedAt','seriesId','occurrenceDate'])
-   && t.keys().hasOnly(['id','title','notes','status','priority','category','dueDate','planType','planStart','planEnd','goalId','subtasks','createdAt','updatedAt','completedAt','deletedAt','seriesId','occurrenceDate'])
+   && t.keys().hasOnly(['id','title','notes','status','priority','category','dueDate','planType','planStart','planEnd','goalId','subtasks','createdAt','updatedAt','completedAt','deletedAt','seriesId','occurrenceDate','purgedAt'])
+   && (!('purgedAt' in t) || (time(t.purgedAt) && t.seriesId != null && t.deletedAt == t.purgedAt && t.title == 'Deleted occurrence' && t.notes == '' && t.status == 'todo' && t.priority == 'none' && t.category == 'Personal' && t.dueDate == null && t.planType == null && t.goalId == null && t.completedAt == null && t.subtasks == []))
    && validId(t.id) && text(t.title,300) && t.title.size() > 0 && text(t.notes,20000)
    && t.status in ['todo','progress','done'] && t.priority in ['none','low','medium','high'] && category(t.category)
    && date(t.dueDate) && date(t.planStart) && date(t.planEnd) && t.planType in [null,'week','month','year']
@@ -29,7 +30,9 @@ service cloud.firestore {
   }
   match /users/{uid}/occurrences/{occurrenceId} {
    allow read: if owner(uid);
-   allow create, update: if owner(uid) && task(request.resource.data) && request.resource.data.seriesId != null && request.resource.data.occurrenceDate != null && request.resource.data.id == occurrenceId && occurrenceId == request.resource.data.seriesId + '_' + request.resource.data.occurrenceDate;
+   allow update: if !('purgedAt' in resource.data) && validOccurrence();
+   allow create: if validOccurrence();
+   function validOccurrence() { return owner(uid) && task(request.resource.data) && request.resource.data.seriesId != null && request.resource.data.occurrenceDate != null && request.resource.data.id == occurrenceId && occurrenceId == request.resource.data.seriesId + '_' + request.resource.data.occurrenceDate; }
    // Keep tombstones so a deleted occurrence never reappears from its series.
    allow delete: if false;
   }

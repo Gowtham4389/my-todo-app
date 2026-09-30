@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  // This application is restricted to the configured Firebase owner.
+  function owner(uid) { return request.auth != null && request.auth.uid == uid && uid == 'HWA6l2VmCxV8lMftMT1WSf3Vu7K2'; }
+  function validId(v) { return v is string && v.matches('^[a-zA-Z0-9_-]{1,180}$'); }
+  function text(v, max) { return v is string && v.size() <= max; }
+  function date(v) { return v == null || (v is string && v.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')); }
+  function time(v) { return v is int && v >= 0; }
+  function optionalTime(v) { return v == null || time(v); }
+  function category(v) { return v in ['Personal','Work','Learning','Health','Finance']; }
+  function subtask(s) { return s.keys().hasOnly(['id','title','done']) && validId(s.id) && text(s.title,300) && s.done is bool; }
+  function stepAt(list, i) { return list.size() <= i || subtask(list[i]); }
+  function steps(list) { return list is list && list.size() <= 10
+    && stepAt(list, 0) && stepAt(list, 1) && stepAt(list, 2) && stepAt(list, 3) && stepAt(list, 4) && stepAt(list, 5) && stepAt(list, 6) && stepAt(list, 7) && stepAt(list, 8) && stepAt(list, 9); }
+  function task(t) {
+   return t.keys().hasAll(['id','title','notes','status','priority','category','dueDate','planType','planStart','planEnd','goalId','subtasks','createdAt','updatedAt','completedAt','deletedAt','seriesId','occurrenceDate'])
+   && t.keys().hasOnly(['id','title','notes','status','priority','category','dueDate','planType','planStart','planEnd','goalId','subtasks','createdAt','updatedAt','completedAt','deletedAt','seriesId','occurrenceDate'])
+   && validId(t.id) && text(t.title,300) && t.title.size() > 0 && text(t.notes,20000)
+   && t.status in ['todo','progress','done'] && t.priority in ['none','low','medium','high'] && category(t.category)
+   && date(t.dueDate) && date(t.planStart) && date(t.planEnd) && t.planType in [null,'week','month','year']
+   && ((t.planType == null && t.planStart == null && t.planEnd == null) || (t.planType != null && t.planStart != null && t.planEnd != null && t.planStart <= t.planEnd))
+   && (t.goalId == null || validId(t.goalId)) && steps(t.subtasks) && time(t.createdAt) && time(t.updatedAt) && optionalTime(t.completedAt) && optionalTime(t.deletedAt)
+   && (t.seriesId == null || validId(t.seriesId)) && date(t.occurrenceDate);
+  }
+  match /users/{uid}/tasks/{taskId} {
+   allow read, delete: if owner(uid);
+   allow create, update: if owner(uid) && task(request.resource.data) && request.resource.data.id == taskId && request.resource.data.seriesId == null && request.resource.data.occurrenceDate == null;
+  }
+  match /users/{uid}/occurrences/{occurrenceId} {
+   allow read: if owner(uid);
+   allow create, update: if owner(uid) && task(request.resource.data) && request.resource.data.seriesId != null && request.resource.data.occurrenceDate != null && request.resource.data.id == occurrenceId && occurrenceId == request.resource.data.seriesId + '_' + request.resource.data.occurrenceDate;
+   // Keep tombstones so a deleted occurrence never reappears from its series.
+   allow delete: if false;
+  }
+  match /users/{uid}/goals/{goalId} {
+   allow read, delete: if owner(uid);
+   allow create, update: if owner(uid) && request.resource.data.keys().hasAll(['id','title','notes','year','category','createdAt','updatedAt']) && request.resource.data.keys().hasOnly(['id','title','notes','year','category','createdAt','updatedAt']) && request.resource.data.id == goalId && validId(goalId) && text(request.resource.data.title,300) && request.resource.data.title.size() > 0 && text(request.resource.data.notes,20000) && request.resource.data.year is int && request.resource.data.year >= 1900 && request.resource.data.year <= 9999 && category(request.resource.data.category) && time(request.resource.data.createdAt) && time(request.resource.data.updatedAt);
+  }
+  match /users/{uid}/series/{seriesId} {
+   allow read: if owner(uid);
+   allow create, update: if owner(uid) && request.resource.data.keys().hasAll(['id','template','frequency','startDate','endDate','createdAt','updatedAt']) && request.resource.data.keys().hasOnly(['id','template','frequency','startDate','endDate','createdAt','updatedAt']) && request.resource.data.id == seriesId && validId(seriesId) && task(request.resource.data.template) && request.resource.data.template.seriesId == null && request.resource.data.frequency in ['daily','weekly','monthly','yearly'] && request.resource.data.startDate != null && date(request.resource.data.startDate) && date(request.resource.data.endDate) && (request.resource.data.endDate == null || request.resource.data.endDate >= request.resource.data.startDate) && time(request.resource.data.createdAt) && time(request.resource.data.updatedAt);
+  }
+  match /users/{uid}/settings/preferences {
+   allow read: if owner(uid);
+   allow create, update: if owner(uid) && request.resource.data.keys().hasAll(['theme','timezone','weekStart']) && request.resource.data.keys().hasOnly(['theme','timezone','weekStart']) && request.resource.data.theme in ['system','light','dark'] && text(request.resource.data.timezone,100) && request.resource.data.weekStart in [0,1];
+  }
+ }
+}

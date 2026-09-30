@@ -1,0 +1,149 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #303a34;
+  background: #fcfcf9;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --bg: #fcfcf9;
+  --surface: #fff;
+  --sidebar: #f2f4ef;
+  --soft: #f5f6f2;
+  --text: #303a34;
+  --muted: #647062;
+  --line: #e7eae2;
+  --accent: #527760;
+  --accent-soft: #e7eee4;
+  --danger: #a9644c;
+  --shadow: 0 8px 40px #24362b12;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #1b211e;
+  --surface: #242c27;
+  --sidebar: #202722;
+  --soft: #29322b;
+  --text: #e2e7df;
+  --muted: #a4aea5;
+  --line: #39443c;
+  --accent: #9bc5a3;
+  --accent-soft: #354b3a;
+  --danger: #edac90;
+  --shadow: 0 8px 40px #0003;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+button {
+  color: inherit;
+  background: none;
+  border: 0;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+input,
+textarea,
+select {
+  min-width: 0;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 11px 12px;
+  font-size: 14px;
+}
+textarea {
+  resize: vertical;
+}
+input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+button,
+a,
+input,
+select,
+textarea {
+  outline-offset: 4px;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+}
+::selection {
+  background: var(--accent-soft);
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+button {
+  transition:
+    background 0.16s,
+    color 0.16s,
+    box-shadow 0.16s;
+}
+button:hover {
+  filter: brightness(0.98);
+}
+button svg,
+a svg {
+  flex-shrink: 0;
+}
+dialog {
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+dialog::backdrop {
+  background: #18291d55;
+  backdrop-filter: blur(3px);
+}
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 1000;
+  background: var(--surface);
+  padding: 14px;
+}
+.skip-link:focus {
+  top: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

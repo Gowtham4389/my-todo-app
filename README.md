@@ -55,7 +55,7 @@ Popup sign-in needs an internet connection and a user gesture. If the browser bl
 
 1. Create a GitHub repository and push this folder to its `main` branch. This workspace is initially an ordinary folder; initialize Git if necessary. Do not commit `.env.local`, personal exports, or downloaded credentials.
 2. In the repository, open Settings → Secrets and variables → Actions → **Variables**. Add all `VITE_FIREBASE_*` and `VITE_OWNER_UID` values from `.env.example`. The workflow reads repository **variables**, not secrets. Firebase's web configuration is public, so variables are appropriate.
-3. Open Settings → Pages → Source and choose **GitHub Actions**.
+3. Open Settings → Pages → Source and choose **GitHub Actions**. Pages must be supported by your repository visibility and GitHub plan. Then add an Actions repository variable named `PAGES_ENABLED` with the value `true`. Without it, CI verifies the app and skips publication.
 4. Push to `main` or manually run **Verify and deploy Daymark**. The workflow installs from the lockfile, checks TypeScript, runs unit tests and emulator security tests, builds, and deploys the `dist` artifact.
 5. Open `https://YOUR_USERNAME.github.io/YOUR_REPOSITORY/`. The workflow automatically sets `VITE_BASE_PATH` to `/YOUR_REPOSITORY/`; Vite asset paths, manifest scope/start URL, and service worker fallback all use it. Navigation uses `#/today`, `#/week`, etc., so a nested-view refresh works on Pages without server rewrites.
 6. Ensure `YOUR_USERNAME.github.io` is in Firebase Authentication's authorized domains and the production rules and indexes are deployed.

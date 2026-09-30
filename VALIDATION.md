@@ -29,3 +29,11 @@ The following have **not** been verified against a real Firebase project or actu
 - GitHub Actions execution and publication to your repository's Pages URL.
 
 Firebase web configuration and the GitHub repository were subsequently supplied. The local configuration, owner rule, Firebase project alias, and GitHub Actions variables are configured. Rules/index deployment requires an authenticated Firebase CLI session. Production authentication and physical-device checks remain separate from emulator and demo tests.
+
+## Repository configuration follow-up
+
+- Source pushed to `Gowtham4389/my-todo-app` on `main`; Firebase build variables configured.
+- Firebase Authentication project configuration is reachable. `localhost` is authorized; `gowtham4389.github.io` still needs to be added.
+- Owner-specific rules passed all six emulator tests.
+- GitHub rejected Pages setup because the current plan does not support Pages for this repository. Repository visibility has not been changed. Publication is gated by the `PAGES_ENABLED=true` repository variable after Pages is available.
+- Firebase CLI is not yet signed in, so production rules/indexes have not been deployed.

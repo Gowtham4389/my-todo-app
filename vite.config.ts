@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => {
           short_name: "Daymark",
           description:
             "Your goals, plans, and everyday progress, in one calm place.",
-          theme_color: "#50755e",
-          background_color: "#f8f9f5",
+          theme_color: "#2C92B8",
+          background_color: "#ffffff",
           display: "standalone",
           scope: base,
           start_url: base,

@@ -349,7 +349,8 @@ function Workspace({
       <div className={s.workspace}>
         <header className={s.topbar}>
           <div className={s.breadcrumb}>
-            My workspace <span>/</span>{" "}
+            <span>My workspace</span>
+            <span>/</span>{" "}
             <strong>
               {view === "settings"
                 ? "Settings"
